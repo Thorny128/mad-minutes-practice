@@ -7,8 +7,8 @@ TIMER_LENGTH = 180
 basic_trig_list = [trigdata.sin_degrees, trigdata.sin_radians, trigdata.cos_degrees, trigdata.cos_radians, trigdata.tan_degrees, trigdata.tan_radians]
 wrong_ans_list = []
 
-print("Note: You will need the square root symbol to answer these questions. Copy and paste it as needed: √")
-print("You can also use the letter v as a square root symbol, and the program will automatically correct it as needed")
+print("Use the square root symbol √ or a v to indicate square roots")
+print("Put negative signs at the very front of a number (e.g. -1/2, NOT 1/-2)")
 while loop:
     input(f"Press ENTER to start a new {round(TIMER_LENGTH / 60, 2)} minute round ")
     start_time = time.time()
@@ -28,7 +28,7 @@ while loop:
         else:
             wrong_ans_list.append([question, user_input, answer])
         num_questions+=1
-        
+
     print("\nTime's up! Here's how you did:")
     print(f"You got {num_correct_ans} out of {num_questions} correct")
     print(f"You averaged {180 / num_questions} seconds per problem")
