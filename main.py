@@ -36,7 +36,7 @@ while loop:
         print("You could fully finish a 3-minute Mad Minutes!")
     if 180 / num_questions <= 120/15:
         print("You could fully finish a 2-minute Mad Minutes!")
-    print("\nHere are the questions you solved incorrectly, and their correct answers")
+    print("\nHere are the questions you solved incorrectly, and their correct answers:\n")
     for [question, incorrect_ans, corr_ans] in wrong_ans_list:
         print(f"{question} = {corr_ans}, but you answered {incorrect_ans}")
 
