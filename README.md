@@ -6,5 +6,5 @@ To help students prepare for this quiz, I created this program and repository to
 * Data saving to a spreadsheet using Pandas DataFrame
 
 # Contact
-Alex Kuriakose, Class of '27 at Sharon High School
+Alex Kuriakose, Class of '27 at Sharon High School\
 alexvinuk@icloud.com
