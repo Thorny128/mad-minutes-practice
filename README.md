@@ -4,6 +4,7 @@ To help students prepare for this quiz, I created this program and repository to
 
 # Upcoming Features
 * Data saving to a spreadsheet using Pandas DataFrame
+* Straightforward way to run this program (without needing to download the files)
 
 # Contact
 Alex Kuriakose, Class of '27 at Sharon High School\
