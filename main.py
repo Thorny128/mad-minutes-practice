@@ -5,8 +5,10 @@ import random
 loop = True
 TIMER_LENGTH = 180
 basic_trig_list = [trigdata.sin_degrees, trigdata.sin_radians, trigdata.cos_degrees, trigdata.cos_radians, trigdata.tan_degrees, trigdata.tan_radians]
+basic_plus_trig_list = basic_trig_list + [trigdata.csc_degrees, trigdata.csc_radians, trigdata.sec_degrees, trigdata.sec_radians, trigdata.cot_degrees, trigdata.cot_radians]
 wrong_ans_list = []
 
+print("Welcome to Mad Minutes Practice!")
 print("Use the square root symbol √ or a v to indicate square roots")
 print("Put negative signs at the very front of a number (e.g. -1/2, NOT 1/-2)")
 while loop:
@@ -17,7 +19,7 @@ while loop:
     wrong_ans_list.clear()
 
     while time.time() - start_time < TIMER_LENGTH:
-        curr_trig_list = random.choice(basic_trig_list)
+        curr_trig_list = random.choice(basic_plus_trig_list)
         question, answer = random.choice(list(curr_trig_list.items()))
         user_input = (input(f"What is {question}? ")
                       .lower()
@@ -26,6 +28,8 @@ while loop:
                       .replace("v", "√"))
         if user_input == answer:
             num_correct_ans+=1
+        elif user_input == "stop":
+            break
         else:
             wrong_ans_list.append([question, user_input, answer])
         num_questions+=1
