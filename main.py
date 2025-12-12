@@ -44,12 +44,13 @@ while loop:
             wrong_ans_list.append([question, user_input, answer])
         num_questions += 1
 
+    time_to_finish = time.time() - start_time
     print("\nTime's up! Here's how you did:")
     print(f"You got {num_correct_ans} out of {num_questions} correct")
-    print(f"You averaged {round(180 / num_questions, 3)} seconds per problem")
-    if 180 / num_questions <= 180 / 15:
+    print(f"You averaged {round(time_to_finish / num_questions, 3)} seconds per problem")
+    if time_to_finish / num_questions <= 180 / 15:
         print("You could fully finish a 3-minute Mad Minutes!")
-    if 180 / num_questions <= 120 / 15:
+    if time_to_finish / num_questions <= 120 / 15:
         print("You could fully finish a 2-minute Mad Minutes!")
     if not (num_questions == num_correct_ans):
         print("\nHere are the questions you solved incorrectly, and their correct answers:")
