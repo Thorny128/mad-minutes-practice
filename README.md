@@ -8,7 +8,6 @@ To help students prepare for this quiz, I created this program and repository to
 
 # Known Issues
 * The timer doesn't immediately stop the program; it only terminates it after answering a question
-* No option to choose between the trig lists without doing it manually
 
 # Contact
 Alex Kuriakose, Class of '27 at Sharon High School\
