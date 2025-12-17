@@ -17,7 +17,8 @@ if 'started' not in st.session_state:
 
 # Setup page
 st.title("⏰ Mad Minutes Practice ⏰")
-st.markdown("Created by Alex Kuriakose, Class of '27 @ Sharon High School")
+st.markdown("Infinite practice questions for Mad Minutes, a weekly quiz where you must solve 15 trigonometry questions in a few minutes!")
+st.markdown(":gray[Created by Alex Kuriakose, Class of '27 @ Sharon High School]")
 st.divider()
 
 @st.fragment(run_every="1000ms")
@@ -55,7 +56,9 @@ if not st.session_state.started and st.session_state.start_time is not None:
 
 # Mode selection
 if not st.session_state.started:
-    st.write("Use the square root symbol √ or a v to indicate square roots")
+    st.write("Unlike normal Mad Minutes, you will continue getting practice questions until time is up (so that you can stress test yourself).")
+    st.write()
+    st.write("Use the square root symbol (√) or a 'v' to indicate square roots (e.g. v3/2)")
     st.write("Put negative signs at the very front of a number (e.g. -1/2, NOT 1/-2)")
 
     mode = st.radio("Select mode:", ["Basic (sin/cos/tan)", "Advanced (includes sec/csc/cot)"])
