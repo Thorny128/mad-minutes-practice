@@ -74,7 +74,7 @@ if not st.session_state.started:
         if timer_length == "3 minutes":
             st.session_state.timer_length = 180
         else:
-            st.session_state.timer_length = 5
+            st.session_state.timer_length = 120
 
         st.session_state.started = True
         st.session_state.start_time = time.time()
