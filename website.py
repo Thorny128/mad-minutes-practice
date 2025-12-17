@@ -1,4 +1,4 @@
-import mmwebsite as st
+import streamlit as st
 import trigdata
 import random
 import time
@@ -19,8 +19,8 @@ TIMER_LENGTH = 180
 # Setup page
 st.title("Mad Minutes Practice")
 
-# Timer display
-if st.session_state.started and st.session_state.start_time:
+@st.fragment(run_every="1000ms")
+def run_timer():
     elapsed = time.time() - st.session_state.start_time
     remaining = max(0, TIMER_LENGTH - elapsed)
     st.markdown(f"### Time Remaining: {int(remaining // 60)}:{int(remaining % 60):02d}")
@@ -37,22 +37,32 @@ if st.session_state.started and st.session_state.start_time:
             for question, user_ans, correct_ans in st.session_state.wrong_answers:
                 st.write(f"{question} = {correct_ans}, but you answered {user_ans}")
 
+# Timer display
+if st.session_state.started and st.session_state.start_time:
+    run_timer()
+
 # Mode selection
 if not st.session_state.started:
     st.write("Use the square root symbol √ or a v to indicate square roots")
     st.write("Put negative signs at the very front of a number (e.g. -1/2, NOT 1/-2)")
 
     mode = st.radio("Select mode:", ["Basic (sin/cos/tan)", "Advanced (includes sec/csc/cot)"])
+    timer_length = st.radio("Select time:", ["3 minutes", "2 minutes"])
 
     if st.button("Start Practice"):
         basic_trig_list = [trigdata.sin_degrees, trigdata.sin_radians, trigdata.cos_degrees,
                           trigdata.cos_radians, trigdata.tan_degrees, trigdata.tan_radians]
+        advanced_trig_list = [trigdata.csc_degrees, trigdata.csc_radians, trigdata.sec_degrees,
+                              trigdata.sec_radians, trigdata.cot_degrees, trigdata.cot_radians]
         if mode == "Basic (sin/cos/tan)":
             st.session_state.trig_list = basic_trig_list
         else:
-            st.session_state.trig_list = basic_trig_list + [trigdata.csc_degrees, trigdata.csc_radians,
-                                                             trigdata.sec_degrees, trigdata.sec_radians,
-                                                             trigdata.cot_degrees, trigdata.cot_radians]
+            st.session_state.trig_list = basic_trig_list + advanced_trig_list
+
+        if timer_length == "3 minutes":
+            TIMER_LENGTH = 180
+        else:
+            TIMER_LENGTH = 120
 
         st.session_state.started = True
         st.session_state.start_time = time.time()
