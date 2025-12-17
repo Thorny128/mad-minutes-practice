@@ -42,7 +42,7 @@ if not st.session_state.started and st.session_state.start_time is not None:
     st.write(f"You got {st.session_state.num_correct} out of {st.session_state.num_questions} correct")
     avg_time = 0
     if st.session_state.num_questions > 0:
-        avg_time = st.session_state.timer_length / st.session_state.num_questions
+        avg_time = (time.time() - st.session_state.start_time) / st.session_state.num_questions
         st.write(f"You averaged {round(avg_time, 3)} seconds per problem")
     if st.session_state.wrong_answers:
         st.write("### Incorrect Answers:")
