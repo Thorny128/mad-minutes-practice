@@ -58,7 +58,7 @@ if not st.session_state.started and st.session_state.start_time is not None:
 if not st.session_state.started:
     st.write("Unlike normal Mad Minutes, you will continue getting practice questions until time is up (so that you can stress test yourself).")
     st.write()
-    st.write("Use the square root symbol (√) or a 'v' to indicate square roots (e.g. v3/2)")
+    st.write("Use the letter 'v' to indicate square roots (e.g. v3/2)")
     st.write("Put negative signs at the very front of a number (e.g. -1/2, NOT 1/-2)")
 
     mode = st.radio("Select mode:", ["Basic (sin/cos/tan)", "Advanced (includes sec/csc/cot)"])
@@ -94,6 +94,7 @@ if not st.session_state.started:
 if st.session_state.started and st.session_state.start_time:
     if time.time() - st.session_state.start_time < st.session_state.timer_length:
         st.write(f"### What is {st.session_state.current_question}?")
+        st.markdown("Use the letter 'v' to indicate square roots (e.g. v3/2)")
 
         with st.form(key='answer_form', clear_on_submit=True):
             user_answer = st.text_input("Your answer:", key=f"input_{st.session_state.num_questions}")
