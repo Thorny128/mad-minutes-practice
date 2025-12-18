@@ -4,10 +4,6 @@ To help students prepare for this quiz, I created this program and repository to
 
 # Upcoming Features
 * Data saving to a spreadsheet using Pandas DataFrame
-* Straightforward way to run this program (without needing to download the files)
-
-# Known Issues
-* The timer doesn't immediately stop the program; it only terminates it after answering a question
 
 # Contact
 Alex Kuriakose, Class of '27 at Sharon High School\
