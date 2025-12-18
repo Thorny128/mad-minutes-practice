@@ -18,6 +18,7 @@ if 'started' not in st.session_state:
 # Setup page
 st.title("⏰ Mad Minutes Practice ⏰")
 st.markdown("Infinite practice questions for Mad Minutes, a weekly quiz where you must solve 15 trigonometry questions in a few minutes!")
+st.write("Unlike normal Mad Minutes, you will continue getting practice questions until time is up.")
 st.markdown(":gray[Created by Alex Kuriakose, Class of '27 @ Sharon High School]")
 st.divider()
 
@@ -39,28 +40,41 @@ if st.session_state.started and st.session_state.start_time:
 
 if not st.session_state.started and st.session_state.start_time is not None:
     st.success("Time's up!")
-    st.write(f"You got {st.session_state.num_correct} out of {st.session_state.num_questions} correct")
+    st.write("### Results")
+    st.write(f"You got {st.session_state.num_correct} out of {st.session_state.num_questions} problems correct")
     avg_time = 0
     if st.session_state.num_questions > 0:
         avg_time = (time.time() - st.session_state.start_time) / st.session_state.num_questions
         st.write(f"You averaged {round(avg_time, 3)} seconds per problem")
+    actual_problems_solved = round(st.session_state.timer_length / avg_time, 1)
+
+    if avg_time <= 12:
+        st.write("You could fully finish a 3-minute Mad Minutes!")
+    else:
+        st.write("You would not be able to fully finish a 3-minute Mad Minutes.")
+    if avg_time <= 8:
+        st.write("You could fully finish a 2-minute Mad Minutes!")
+    else:
+        st.write("You would not be able to fully finish a 2-minute Mad Minutes.")
+
     if st.session_state.wrong_answers:
         st.write("### Incorrect Answers:")
         for question, user_ans, correct_ans in st.session_state.wrong_answers:
-            st.write(f"{question} = {correct_ans}, but you answered {user_ans}")
-    if avg_time < 12:
-        st.write("You could fully finish a 3-minute Mad Minutes!")
-    if avg_time < 8:
-        st.write("You could fully finish a 2-minute Mad Minutes!")
+            st.write(f"{question} = {correct_ans}, but you answered '{user_ans}'")
+
     st.divider()
+    st.write("## New Game")
 
 # Mode selection
 if not st.session_state.started:
-    st.write("Unlike normal Mad Minutes, you will continue getting practice questions until time is up (so that you can stress test yourself).")
-    st.write()
-    st.write("Use the letter 'v' to indicate square roots (e.g. v3/2)")
-    st.write("Put negative signs at the very front of a number (e.g. -1/2, NOT 1/-2)")
+    st.subheader("Formatting Tips")
+    st.markdown("""
+     * Use the letter 'v' to indicate square roots (e.g. v3/2)
+     * Use 'undefined' for undefined values
+     * Put negative signs at the very front of a number (e.g. -1/2, NOT 1/-2)
+     """)
 
+    st.subheader("Options")
     mode = st.radio("Select mode:", ["Basic (sin/cos/tan)", "Advanced (includes sec/csc/cot)"])
     timer_length = st.radio("Select time:", ["3 minutes", "2 minutes"])
 
@@ -95,6 +109,7 @@ if st.session_state.started and st.session_state.start_time:
     if time.time() - st.session_state.start_time < st.session_state.timer_length:
         st.write(f"### What is {st.session_state.current_question}?")
         st.markdown("Use the letter 'v' to indicate square roots (e.g. v3/2)")
+        st.markdown("Use 'undefined' for undefined values")
 
         with st.form(key='answer_form', clear_on_submit=True):
             user_answer = st.text_input("Your answer:", key=f"input_{st.session_state.num_questions}")
