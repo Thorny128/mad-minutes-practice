@@ -108,8 +108,10 @@ if not st.session_state.started:
 if st.session_state.started and st.session_state.start_time:
     if time.time() - st.session_state.start_time < st.session_state.timer_length:
         st.write(f"### What is {st.session_state.current_question}?")
-        st.markdown("Use the letter 'v' to indicate square roots (e.g. v3/2)")
-        st.markdown("Use 'undefined' for undefined values")
+        st.markdown("""
+        * Use the letter 'v' to indicate square roots (e.g. v3/2)
+        * Use 'undefined' for undefined values
+        """)
 
         with st.form(key='answer_form', clear_on_submit=True):
             user_answer = st.text_input("Your answer:", key=f"input_{st.session_state.num_questions}")
