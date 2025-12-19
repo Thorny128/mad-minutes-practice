@@ -22,6 +22,30 @@ st.write("Unlike normal Mad Minutes, you will continue getting practice question
 st.markdown(":gray[Created by Alex Kuriakose, Class of '27 @ Sharon High School]")
 st.divider()
 
+APP_VERSION = "v1.2.0"
+
+st.markdown(
+    f"""
+    <style>
+    .version-text {{
+        position: fixed;
+        top: 60px;
+        right: 20px;
+        font-size: 0.9rem;
+        color: #888;
+        z-index: 9999;
+        background-color: rgba(255, 255, 255, 0.9);
+        padding: 5px 10px;
+        border-radius: 5px;
+    }}
+    </style>
+    <div class="version-text">
+        {APP_VERSION}
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
 @st.fragment(run_every="1000ms")
 def run_timer():
     elapsed = time.time() - st.session_state.start_time
