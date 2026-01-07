@@ -129,6 +129,10 @@ if not st.session_state.started:
 # Question and answer form
 if st.session_state.started and st.session_state.start_time:
     if time.time() - st.session_state.start_time < st.session_state.timer_length:
+        if (st.session_state.num_questions == 1):
+            st.write(f"### {st.session_state.num_questions} Question Answered")
+        else:
+            st.write(f"### {st.session_state.num_questions} Questions Answered")
         st.write(f"### What is {st.session_state.current_question}?")
         st.markdown("""
         * Use the letter 'v' to indicate square roots (e.g. v3/2)
