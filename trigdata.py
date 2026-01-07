@@ -1,25 +1,3 @@
-# sin_degrees = [
-#     {"angle": "0°", "unit": "degrees", "function": "sin", "quadrant": 1, "question": "sin(0º)", "answer": "0"},
-#     {"angle": "30°", "unit": "degrees", "function": "sin", "quadrant": 1, "question": "sin(30º)", "answer": "1/2"},
-#     {"angle": "45°", "unit": "degrees", "function": "sin", "quadrant": 1, "question": "sin(45º)", "answer": "√2/2"},
-#     {"angle": "60°", "unit": "degrees", "function": "sin", "quadrant": 1, "question": "sin(60º)", "answer": "√3/2"},
-#     {"angle": "90°", "unit": "degrees", "function": "sin", "quadrant": 1, "question": "sin(90º)", "answer": "1"},
-#     {"angle": "120°", "unit": "degrees", "function": "sin", "quadrant": 2, "question": "sin(120º)", "answer": "√3/2"},
-#     {"angle": "135°", "unit": "degrees", "function": "sin", "quadrant": 2, "question": "sin(135º)", "answer": "√2/2"},
-#     {"angle": "150°", "unit": "degrees", "function": "sin", "quadrant": 2, "question": "sin(150º)", "answer": "1/2"},
-#     {"angle": "180°", "unit": "degrees", "function": "sin", "quadrant": 2, "question": "sin(180º)", "answer": "0"},
-#     {"angle": "210°", "unit": "degrees", "function": "sin", "quadrant": 3, "question": "sin(210º)", "answer": "-1/2"},
-#     {"angle": "225°", "unit": "degrees", "function": "sin", "quadrant": 3, "question": "sin(225º)", "answer": "-√2/2"},
-#     {"angle": "240°", "unit": "degrees", "function": "sin", "quadrant": 3, "question": "sin(240º)", "answer": "-√3/2"},
-#     {"angle": "270°", "unit": "degrees", "function": "sin", "quadrant": 3, "question": "sin(270º)", "answer": "-1"},
-#     {"angle": "300°", "unit": "degrees", "function": "sin", "quadrant": 4, "question": "sin(300º)", "answer": "-√3/2"},
-#     {"angle": "315°", "unit": "degrees", "function": "sin", "quadrant": 4, "question": "sin(315º)", "answer": "-√2/2"},
-#     {"angle": "330°", "unit": "degrees", "function": "sin", "quadrant": 4, "question": "sin(330º)", "answer": "-1/2"},
-#     {"angle": "360°", "unit": "degrees", "function": "sin", "quadrant": 4, "question": "sin(360º)", "answer": "0"}
-# ]
-
-
-
 sin_degrees = {
     "sin(0º)": "0",
     "sin(30º)": "1/2",
