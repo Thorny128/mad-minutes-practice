@@ -1,7 +1,9 @@
+import pandas as pd
 import streamlit as st
 import trigdata
 import random
 import time
+from streamlit_gsheets import GSheetsConnection
 
 # Initialize session state
 if 'started' not in st.session_state:
@@ -14,6 +16,16 @@ if 'started' not in st.session_state:
     st.session_state.current_answer = None
     st.session_state.trig_list = []
     st.session_state.timer_length = 180
+
+conn = st.connection("gsheets", type=GSheetsConnection)
+df = conn.read()
+
+with st.sidebar:
+    with st.container(horizontal=True):
+        st.write("### Leaderboard")
+        st.button("Refresh Leaderboard")
+    st.dataframe(df)
+
 
 # Setup page
 st.title("⏰ Mad Minutes Practice ⏰")
@@ -97,8 +109,9 @@ if not st.session_state.started:
      """)
 
     st.subheader("Options")
-    mode = st.radio("Select mode:", ["Basic (sin/cos/tan)", "Advanced (includes sec/csc/cot)"])
-    timer_length = st.radio("Select time:", ["3 minutes", "2 minutes"])
+    with st.container(horizontal=True):
+        mode = st.radio("Select mode:", ["Basic (sin/cos/tan)", "Advanced (includes sec/csc/cot)"])
+        timer_length = st.radio("Select time:", ["3 minutes", "2 minutes"])
 
     if st.button("Start Practice"):
         basic_trig_list = [trigdata.sin_degrees, trigdata.sin_radians, trigdata.cos_degrees,
