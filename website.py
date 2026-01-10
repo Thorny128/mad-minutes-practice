@@ -17,6 +17,8 @@ if 'started' not in st.session_state:
     st.session_state.current_answer = None
     st.session_state.trig_list = []
     st.session_state.timer_length = 180
+    st.session_state.speedrun_mode = False
+    st.session_state.speedrun_running = False
 
 conn = st.connection("gsheets", type=GSheetsConnection)
 if 'df' not in st.session_state:
@@ -71,12 +73,24 @@ def run_timer():
         st.session_state.started = False
         st.rerun()
 
+@st.fragment(run_every="1000ms")
+def run_stopwatch():
+    elapsed = time.time() - st.session_state.start_time
+    st.markdown(f"### Time Remaining: {int(elapsed // 60)}:{int(elapsed % 60):02d}")
+
 # Timer display
-if st.session_state.started and st.session_state.start_time:
+if st.session_state.started and st.session_state.start_time and not st.session_state.speedrun_mode:
     run_timer()
     if st.button("Stop Early"):
         st.session_state.started = False
         st.rerun()
+
+if st.session_state.started and st.session_state.start_time and st.session_state.speedrun_mode:
+    run_stopwatch()
+    if st.button("Stop Early"):
+        st.session_state.speedrun_running = False
+        st.rerun()
+
 
 @st.dialog("Enter Username")
 def submit_score(score):
@@ -84,9 +98,9 @@ def submit_score(score):
     name = st.text_input("Enter Username Here")
     if st.button("Submit"):
         new_row = pd.DataFrame({
-            "username": [name],
-            "numcorrectquestions": [score],
-            "date": [datetime.now().strftime("%Y-%m-%d")]
+            "Username": [name],
+            "Time to finish Mad Minutes": [score],
+            "Date": [datetime.now().strftime("%m/%d/%Y")]
         })
         updated_df = pd.concat([st.session_state.df, new_row], ignore_index=True)
         conn.update(worksheet="Leaderboard", data=updated_df)
@@ -95,7 +109,7 @@ def submit_score(score):
         st.rerun()
 
 
-if not st.session_state.started and st.session_state.start_time is not None:
+if (not st.session_state.started and st.session_state.start_time is not None):
     st.success("Time's up!")
     st.write("### Results")
     st.write(f"You got {st.session_state.num_correct} out of {st.session_state.num_questions} problems correct")
@@ -138,11 +152,11 @@ if not st.session_state.started:
         mode = st.radio("Select mode:", ["Basic (sin/cos/tan)", "Advanced (includes sec/csc/cot)"])
         timer_length = st.radio("Select time:", ["3 minutes", "2 minutes"])
 
+    basic_trig_list = [trigdata.sin_degrees, trigdata.sin_radians, trigdata.cos_degrees,
+                       trigdata.cos_radians, trigdata.tan_degrees, trigdata.tan_radians]
+    advanced_trig_list = [trigdata.csc_degrees, trigdata.csc_radians, trigdata.sec_degrees,
+                          trigdata.sec_radians, trigdata.cot_degrees, trigdata.cot_radians]
     if st.button("Start Practice"):
-        basic_trig_list = [trigdata.sin_degrees, trigdata.sin_radians, trigdata.cos_degrees,
-                          trigdata.cos_radians, trigdata.tan_degrees, trigdata.tan_radians]
-        advanced_trig_list = [trigdata.csc_degrees, trigdata.csc_radians, trigdata.sec_degrees,
-                              trigdata.sec_radians, trigdata.cot_degrees, trigdata.cot_radians]
         if mode == "Basic (sin/cos/tan)":
             st.session_state.trig_list = basic_trig_list
         else:
@@ -163,9 +177,58 @@ if not st.session_state.started:
         current_trig_dict = random.choice(st.session_state.trig_list)
         st.session_state.current_question, st.session_state.current_answer = random.choice(list(current_trig_dict.items()))
         st.rerun()
+    elif st.button("Mad Minutes Speedrun"):
+        st.session_state.trig_list = basic_trig_list + advanced_trig_list
+        st.session_state.speedrun_mode = True
+        st.session_state.started = True  # Add this line
+        st.session_state.start_time = time.time()
+        st.session_state.num_questions = 0
+        st.session_state.num_correct = 0
+        st.session_state.wrong_answers = []
+        current_trig_dict = random.choice(st.session_state.trig_list)
+        st.session_state.current_question, st.session_state.current_answer = random.choice(
+            list(current_trig_dict.items()))
+        st.rerun()
+
+if st.session_state.speedrun_mode and st.session_state.started:
+    if st.session_state.num_questions < 15:
+        st.write(f"### {st.session_state.num_questions}/15 Questions Answered")
+        st.write(f"### What is {st.session_state.current_question}?")
+        st.markdown("""
+        * Use the letter 'v' to indicate square roots (e.g. v3/2)
+        * Use 'undefined' for undefined values
+        """)
+        with st.form(key='answer_form', clear_on_submit=True):
+            user_answer = st.text_input("Your answer:", key=f"input_{st.session_state.num_questions}")
+            submit = st.form_submit_button("Submit")
+
+            if submit and user_answer:
+                processed_answer = (user_answer.lower()
+                                    .replace(" ", "")
+                                    .replace("0.5", "1/2")
+                                    .replace("v", "√"))
+
+                st.session_state.num_questions += 1
+
+                if processed_answer == st.session_state.current_answer:
+                    st.session_state.num_correct += 1
+                else:
+                    st.session_state.wrong_answers.append([
+                        st.session_state.current_question,
+                        processed_answer,
+                        st.session_state.current_answer
+                    ])
+
+                if st.session_state.num_questions < 15:  # Only generate next question if not done
+                    current_trig_dict = random.choice(st.session_state.trig_list)
+                    st.session_state.current_question, st.session_state.current_answer = random.choice(
+                        list(current_trig_dict.items()))
+                else:
+                    st.session_state.started = False
+                st.rerun()
 
 # Question and answer form
-if st.session_state.started and st.session_state.start_time:
+if st.session_state.started and st.session_state.start_time and not st.session_state.speedrun_mode:
     if time.time() - st.session_state.start_time < st.session_state.timer_length:
         if (st.session_state.num_questions == 1):
             st.write(f"### {st.session_state.num_questions} Question Answered")
