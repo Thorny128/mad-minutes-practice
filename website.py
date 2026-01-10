@@ -4,6 +4,7 @@ import trigdata
 import random
 import time
 from streamlit_gsheets import GSheetsConnection
+from datetime import datetime
 
 # Initialize session state
 if 'started' not in st.session_state:
@@ -18,13 +19,16 @@ if 'started' not in st.session_state:
     st.session_state.timer_length = 180
 
 conn = st.connection("gsheets", type=GSheetsConnection)
-df = conn.read()
+if 'df' not in st.session_state:
+    st.session_state.df = conn.read()
 
 with st.sidebar:
     with st.container(horizontal=True):
         st.write("### Leaderboard")
-        st.button("Refresh Leaderboard")
-    st.dataframe(df)
+        if st.button("Refresh Leaderboard"):
+            st.session_state.df = conn.read(ttl=0)
+            st.rerun()
+    st.dataframe(st.session_state.df)
 
 
 # Setup page
@@ -34,7 +38,7 @@ st.write("Unlike normal Mad Minutes, you will continue getting practice question
 st.markdown(":gray[Created by Alex Kuriakose, Class of '27 @ Sharon High School]")
 st.divider()
 
-APP_VERSION = "v1.2.1"
+APP_VERSION = "v1.3"
 
 st.markdown(
     f"""
@@ -74,6 +78,23 @@ if st.session_state.started and st.session_state.start_time:
         st.session_state.started = False
         st.rerun()
 
+@st.dialog("Enter Username")
+def submit_score(score):
+    st.write("If a username already exists in the database, it will be overridden with your current score")
+    name = st.text_input("Enter Username Here")
+    if st.button("Submit"):
+        new_row = pd.DataFrame({
+            "username": [name],
+            "numcorrectquestions": [score],
+            "date": [datetime.now().strftime("%Y-%m-%d")]
+        })
+        updated_df = pd.concat([st.session_state.df, new_row], ignore_index=True)
+        conn.update(worksheet="Leaderboard", data=updated_df)
+        st.session_state.df = updated_df
+        st.success("Score submitted!")
+        st.rerun()
+
+
 if not st.session_state.started and st.session_state.start_time is not None:
     st.success("Time's up!")
     st.write("### Results")
@@ -96,7 +117,11 @@ if not st.session_state.started and st.session_state.start_time is not None:
         for question, user_ans, correct_ans in st.session_state.wrong_answers:
             st.write(f"{question} = {correct_ans}, but you answered '{user_ans}'")
 
+    if st.button("Save Score to Leaderboard"):
+        submit_score(st.session_state.num_correct)
+
     st.divider()
+
 
 # Mode selection
 if not st.session_state.started:
@@ -126,7 +151,7 @@ if not st.session_state.started:
         if timer_length == "3 minutes":
             st.session_state.timer_length = 180
         else:
-            st.session_state.timer_length = 120
+            st.session_state.timer_length = 3
 
         st.session_state.started = True
         st.session_state.start_time = time.time()
