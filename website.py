@@ -87,7 +87,7 @@ if st.session_state.started and st.session_state.start_time and not st.session_s
 
 if st.session_state.started and st.session_state.start_time and st.session_state.speedrun_mode:
     run_stopwatch()
-    if st.button("Stop Early"):
+    if st.button("End Speedrun"):
         st.session_state.speedrun_running = False
         st.rerun()
 
