@@ -6,6 +6,8 @@ import time
 from streamlit_gsheets import GSheetsConnection
 from datetime import datetime
 
+MAD_MINUTES_SPEEDRUN_QUESTIONS = 2
+
 # Initialize session state
 if 'started' not in st.session_state:
     st.session_state.started = False
@@ -19,6 +21,7 @@ if 'started' not in st.session_state:
     st.session_state.timer_length = 180
     st.session_state.speedrun_mode = False
     st.session_state.speedrun_running = False
+    st.session_state.final_time = 0
 
 conn = st.connection("gsheets", type=GSheetsConnection)
 if 'df' not in st.session_state:
@@ -78,66 +81,93 @@ def run_stopwatch():
     elapsed = time.time() - st.session_state.start_time
     st.markdown(f"### Time Remaining: {int(elapsed // 60)}:{int(elapsed % 60):02d}")
 
-# Timer display
+# Timer display for practice mode
 if st.session_state.started and st.session_state.start_time and not st.session_state.speedrun_mode:
     run_timer()
     if st.button("Stop Early"):
         st.session_state.started = False
         st.rerun()
 
+# Stopwatch display for Mad Minutes Speedrun mode
 if st.session_state.started and st.session_state.start_time and st.session_state.speedrun_mode:
     run_stopwatch()
     if st.button("End Speedrun"):
+        st.session_state.started = False
         st.session_state.speedrun_running = False
         st.rerun()
 
 
 @st.dialog("Enter Username")
-def submit_score(score):
-    st.write("If a username already exists in the database, it will be overridden with your current score")
+def submit_score(user_time):
+    st.write("If a username already exists in the database, it will be overridden with your current time")
     name = st.text_input("Enter Username Here")
     if st.button("Submit"):
-        new_row = pd.DataFrame({
-            "Username": [name],
-            "Time to finish Mad Minutes": [score],
-            "Date": [datetime.now().strftime("%m/%d/%Y")]
-        })
-        updated_df = pd.concat([st.session_state.df, new_row], ignore_index=True)
+        # Check if username already exists
+        existing_df = st.session_state.df.copy()
+        if name in existing_df['Username'].values:
+            # Update existing entry
+            existing_df.loc[existing_df['Username'] == name, 'Time to finish Mad Minutes'] = user_time
+            existing_df.loc[existing_df['Username'] == name, 'Date'] = datetime.now().strftime("%m/%d/%Y")
+            updated_df = existing_df
+        else:
+            # Add new entry
+            new_row = pd.DataFrame({
+                "Username": [name],
+                "Time to finish Mad Minutes": [user_time],
+                "Date": [datetime.now().strftime("%m/%d/%Y")]
+            })
+            updated_df = pd.concat([st.session_state.df, new_row], ignore_index=True)
+
         conn.update(worksheet="Leaderboard", data=updated_df)
         st.session_state.df = updated_df
         st.success("Score submitted!")
+        st.session_state.speedrun_mode = False
+        st.session_state.started = False
+        st.session_state.start_time = None
         st.rerun()
 
-
-if (not st.session_state.started and st.session_state.start_time is not None):
-    st.success("Time's up!")
-    st.write("### Results")
-    st.write(f"You got {st.session_state.num_correct} out of {st.session_state.num_questions} problems correct")
-    avg_time = 0
-    if st.session_state.num_questions > 0:
-        avg_time = (time.time() - st.session_state.start_time) / st.session_state.num_questions
-        st.write(f"You averaged {round(avg_time, 3)} seconds per problem")
-    if avg_time <= 12:
-        st.write("You could fully finish a 3-minute Mad Minutes!")
+# Results Section
+if not st.session_state.started and st.session_state.start_time is not None:
+    if st.session_state.speedrun_mode:
+        # Speedrun results
+        if st.session_state.num_questions < MAD_MINUTES_SPEEDRUN_QUESTIONS:
+            st.write("#### The speedrun has ended. You either got a question wrong or ended the speedrun prematurely.")
+            st.session_state.speedrun_mode = False
+            st.session_state.started = False
+            st.session_state.start_time = None
+        else:
+            if st.session_state.final_time == 0:
+                st.session_state.final_time = round(time.time() - st.session_state.start_time, 3)
+            st.write("## Congratulations for finishing the speedrun!")
+            st.write(f"You finished Mad Minutes in {st.session_state.final_time} seconds!")
+            if st.button("Save Score to Leaderboard"):
+                submit_score(st.session_state.final_time)
     else:
-        st.write("You would not be able to fully finish a 3-minute Mad Minutes.")
-    if avg_time <= 8:
-        st.write("You could fully finish a 2-minute Mad Minutes!")
-    else:
-        st.write("You would not be able to fully finish a 2-minute Mad Minutes.")
+        # Practice mode results
+        st.success("Time's up!")
+        st.write("### Results")
+        st.write(f"You got {st.session_state.num_correct} out of {st.session_state.num_questions} problems correct")
+        avg_time = 0
+        if st.session_state.num_questions > 0:
+            avg_time = (time.time() - st.session_state.start_time) / st.session_state.num_questions
+            st.write(f"You averaged {round(avg_time, 3)} seconds per problem")
+        if avg_time <= 12:
+            st.write("You could fully finish a 3-minute Mad Minutes!")
+        else:
+            st.write("You would not be able to fully finish a 3-minute Mad Minutes.")
+        if avg_time <= 8:
+            st.write("You could fully finish a 2-minute Mad Minutes!")
+        else:
+            st.write("You would not be able to fully finish a 2-minute Mad Minutes.")
 
-    if st.session_state.wrong_answers:
-        st.write("### Incorrect Answers:")
-        for question, user_ans, correct_ans in st.session_state.wrong_answers:
-            st.write(f"{question} = {correct_ans}, but you answered '{user_ans}'")
-
-    if st.button("Save Score to Leaderboard"):
-        submit_score(st.session_state.num_correct)
+        if st.session_state.wrong_answers:
+            st.write("### Incorrect Answers:")
+            for question, user_ans, correct_ans in st.session_state.wrong_answers:
+                st.write(f"{question} = {correct_ans}, but you answered '{user_ans}'")
 
     st.divider()
 
-
-# Mode selection
+# Mode Selection
 if not st.session_state.started:
     st.write("## New Game")
     st.subheader("Formatting Tips")
@@ -180,18 +210,20 @@ if not st.session_state.started:
     elif st.button("Mad Minutes Speedrun"):
         st.session_state.trig_list = basic_trig_list + advanced_trig_list
         st.session_state.speedrun_mode = True
-        st.session_state.started = True  # Add this line
+        st.session_state.started = True
         st.session_state.start_time = time.time()
         st.session_state.num_questions = 0
         st.session_state.num_correct = 0
         st.session_state.wrong_answers = []
+        st.session_state.final_time = 0
         current_trig_dict = random.choice(st.session_state.trig_list)
         st.session_state.current_question, st.session_state.current_answer = random.choice(
             list(current_trig_dict.items()))
         st.rerun()
 
+# Main loop for Mad Minutes Speedrun mode
 if st.session_state.speedrun_mode and st.session_state.started:
-    if st.session_state.num_questions < 15:
+    if st.session_state.num_questions < MAD_MINUTES_SPEEDRUN_QUESTIONS:
         st.write(f"### {st.session_state.num_questions}/15 Questions Answered")
         st.write(f"### What is {st.session_state.current_question}?")
         st.markdown("""
@@ -213,13 +245,10 @@ if st.session_state.speedrun_mode and st.session_state.started:
                 if processed_answer == st.session_state.current_answer:
                     st.session_state.num_correct += 1
                 else:
-                    st.session_state.wrong_answers.append([
-                        st.session_state.current_question,
-                        processed_answer,
-                        st.session_state.current_answer
-                    ])
+                    st.session_state.started = False
+                    st.session_state.speedrun_running = False
 
-                if st.session_state.num_questions < 15:  # Only generate next question if not done
+                if st.session_state.num_questions < MAD_MINUTES_SPEEDRUN_QUESTIONS:  # Only generate next question if not done
                     current_trig_dict = random.choice(st.session_state.trig_list)
                     st.session_state.current_question, st.session_state.current_answer = random.choice(
                         list(current_trig_dict.items()))
@@ -227,10 +256,10 @@ if st.session_state.speedrun_mode and st.session_state.started:
                     st.session_state.started = False
                 st.rerun()
 
-# Question and answer form
+# Main loop for Practice Mode
 if st.session_state.started and st.session_state.start_time and not st.session_state.speedrun_mode:
     if time.time() - st.session_state.start_time < st.session_state.timer_length:
-        if (st.session_state.num_questions == 1):
+        if st.session_state.num_questions == 1:
             st.write(f"### {st.session_state.num_questions} Question Answered")
         else:
             st.write(f"### {st.session_state.num_questions} Questions Answered")
@@ -266,4 +295,3 @@ if st.session_state.started and st.session_state.start_time and not st.session_s
                 current_trig_dict = random.choice(st.session_state.trig_list)
                 st.session_state.current_question, st.session_state.current_answer = random.choice(list(current_trig_dict.items()))
                 st.rerun()
-
