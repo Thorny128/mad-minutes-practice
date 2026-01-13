@@ -207,19 +207,22 @@ if not st.session_state.started:
         current_trig_dict = random.choice(st.session_state.trig_list)
         st.session_state.current_question, st.session_state.current_answer = random.choice(list(current_trig_dict.items()))
         st.rerun()
-    elif st.button("Mad Minutes Speedrun"):
-        st.session_state.trig_list = basic_trig_list + advanced_trig_list
-        st.session_state.speedrun_mode = True
-        st.session_state.started = True
-        st.session_state.start_time = time.time()
-        st.session_state.num_questions = 0
-        st.session_state.num_correct = 0
-        st.session_state.wrong_answers = []
-        st.session_state.final_time = 0
-        current_trig_dict = random.choice(st.session_state.trig_list)
-        st.session_state.current_question, st.session_state.current_answer = random.choice(
-            list(current_trig_dict.items()))
-        st.rerun()
+    with st.container(horizontal=True):
+        if st.button("Mad Minutes Speedrun"):
+            st.session_state.trig_list = basic_trig_list + advanced_trig_list
+            st.session_state.speedrun_mode = True
+            st.session_state.started = True
+            st.session_state.start_time = time.time()
+            st.session_state.num_questions = 0
+            st.session_state.num_correct = 0
+            st.session_state.wrong_answers = []
+            st.session_state.final_time = 0
+            current_trig_dict = random.choice(st.session_state.trig_list)
+            st.session_state.current_question, st.session_state.current_answer = random.choice(
+                list(current_trig_dict.items()))
+            st.rerun()
+        if st.button("What is Speedrun Mode?"):
+            st.markdown("In Mad Minutes Speedrun mode, you must correctly answer 15 Mad Minutes questions (covering sin/cos/tan/sec/csc/cot from 0-360º) as quickly as possible—if you get even one question wrong, the speedrun immediately ends. If you achieve a perfect score, you can save your completion time and username to the leaderboard, which either adds a new entry or replaces your existing time if your username is already registered.")
 
 # Main loop for Mad Minutes Speedrun mode
 if st.session_state.speedrun_mode and st.session_state.started:
