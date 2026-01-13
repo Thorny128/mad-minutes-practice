@@ -6,7 +6,7 @@ import time
 from streamlit_gsheets import GSheetsConnection
 from datetime import datetime
 
-MAD_MINUTES_SPEEDRUN_QUESTIONS = 2
+MAD_MINUTES_SPEEDRUN_QUESTIONS = 15
 
 # Initialize session state
 if 'started' not in st.session_state:
