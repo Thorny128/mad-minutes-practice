@@ -43,7 +43,7 @@ st.write("Unlike normal Mad Minutes, you will continue getting practice question
 st.markdown(":gray[Created by Alex Kuriakose, Class of '27 @ Sharon High School]")
 st.divider()
 
-APP_VERSION = "v1.3"
+APP_VERSION = "v1.3.2"
 
 st.markdown(
     f"""
@@ -97,14 +97,36 @@ if st.session_state.started and st.session_state.start_time and st.session_state
         st.rerun()
 
 
+# python
 @st.dialog("Enter Username")
 def submit_score(user_time):
     st.write("If a username already exists in the database, it will be overridden with your current time")
     name = st.text_input("Enter Username Here")
+
     if st.button("Submit"):
-        # Check if username already exists
-        existing_df = st.session_state.df.copy()
+        name = name.strip()
+        if not name:
+            st.warning("Please enter a username.")
+            return
+
+        # Always read fresh data before deciding
+        existing_df = conn.read(ttl=0)
+
+        # If user exists, compare times safely
         if name in existing_df['Username'].values:
+            existing_row = existing_df[existing_df['Username'] == name].iloc[0]
+            old_time_raw = existing_row.get('Time to finish Mad Minutes', None)
+
+            # Try to parse the old time to a float; if not possible, treat as no previous valid time
+            try:
+                old_time = float(old_time_raw)
+            except (TypeError, ValueError):
+                old_time = None
+
+            if old_time is not None and user_time >= old_time:
+                st.warning(f"Your previous time ({old_time}s) was better. Score not updated.")
+                return
+
             # Update existing entry
             existing_df.loc[existing_df['Username'] == name, 'Time to finish Mad Minutes'] = user_time
             existing_df.loc[existing_df['Username'] == name, 'Date'] = datetime.now().strftime("%m/%d/%Y")
@@ -116,8 +138,9 @@ def submit_score(user_time):
                 "Time to finish Mad Minutes": [user_time],
                 "Date": [datetime.now().strftime("%m/%d/%Y")]
             })
-            updated_df = pd.concat([st.session_state.df, new_row], ignore_index=True)
+            updated_df = pd.concat([existing_df, new_row], ignore_index=True)
 
+        # Persist and update UI state
         conn.update(worksheet="Leaderboard", data=updated_df)
         st.session_state.df = updated_df
         st.success("Score submitted!")
