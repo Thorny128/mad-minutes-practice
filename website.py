@@ -6,7 +6,7 @@ import time
 from streamlit_gsheets import GSheetsConnection
 from datetime import datetime
 
-MAD_MINUTES_SPEEDRUN_QUESTIONS = 15
+MAD_MINUTES_SPEEDRUN_QUESTIONS = 2
 
 # Initialize session state
 if 'started' not in st.session_state:
@@ -43,7 +43,7 @@ st.write("Unlike normal Mad Minutes, you will continue getting practice question
 st.markdown(":gray[Created by Alex Kuriakose, Class of '27 @ Sharon High School]")
 st.divider()
 
-APP_VERSION = "v1.3"
+APP_VERSION = "v1.3.1"
 
 st.markdown(
     f"""
@@ -104,11 +104,18 @@ def submit_score(user_time):
     if st.button("Submit"):
         # Check if username already exists
         existing_df = st.session_state.df.copy()
+        existing_row = existing_df[existing_df['Username'] == name]
+        old_time = existing_row['Time to finish Mad Minutes'].values[0]
         if name in existing_df['Username'].values:
-            # Update existing entry
-            existing_df.loc[existing_df['Username'] == name, 'Time to finish Mad Minutes'] = user_time
-            existing_df.loc[existing_df['Username'] == name, 'Date'] = datetime.now().strftime("%m/%d/%Y")
-            updated_df = existing_df
+            if user_time < old_time:
+                # Update existing entry
+                existing_df.loc[existing_df['Username'] == name, 'Time to finish Mad Minutes'] = user_time
+                existing_df.loc[existing_df['Username'] == name, 'Date'] = datetime.now().strftime("%m/%d/%Y")
+                updated_df = existing_df
+            else:
+                st.warning(f"Your previous time ({old_time}s) was better. Score not updated.")
+                st.rerun()
+                return
         else:
             # Add new entry
             new_row = pd.DataFrame({
@@ -195,7 +202,7 @@ if not st.session_state.started:
         if timer_length == "3 minutes":
             st.session_state.timer_length = 180
         else:
-            st.session_state.timer_length = 3
+            st.session_state.timer_length = 120
 
         st.session_state.started = True
         st.session_state.start_time = time.time()
