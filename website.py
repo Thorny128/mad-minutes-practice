@@ -79,7 +79,7 @@ def run_timer():
 @st.fragment(run_every="1000ms")
 def run_stopwatch():
     elapsed = time.time() - st.session_state.start_time
-    st.markdown(f"### Time Remaining: {int(elapsed // 60)}:{int(elapsed % 60):02d}")
+    st.markdown(f"### Time: {int(elapsed // 60)}:{int(elapsed % 60):02d}")
 
 # Timer display for practice mode
 if st.session_state.started and st.session_state.start_time and not st.session_state.speedrun_mode:
@@ -195,7 +195,7 @@ if not st.session_state.started:
         if timer_length == "3 minutes":
             st.session_state.timer_length = 180
         else:
-            st.session_state.timer_length = 3
+            st.session_state.timer_length = 120
 
         st.session_state.started = True
         st.session_state.start_time = time.time()
