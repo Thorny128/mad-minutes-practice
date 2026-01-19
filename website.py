@@ -23,6 +23,8 @@ if 'started' not in st.session_state:
     st.session_state.speedrun_running = False
     st.session_state.final_time = 0
 
+APP_VERSION = "v1.3.4"
+
 conn = st.connection("gsheets", type=GSheetsConnection)
 if 'df' not in st.session_state:
     st.session_state.df = conn.read()
@@ -34,7 +36,10 @@ with st.sidebar:
             st.session_state.df = conn.read(ttl=0)
             st.rerun()
     st.dataframe(st.session_state.df)
-
+    st.divider()
+    st.write(f"### Release Notes for {APP_VERSION}")
+    st.markdown("- Added more granular control for practice mode")
+    st.markdown("- You can you use 'und' instead of 'undefined' to save time!")
 
 # Setup page
 st.title("⏰ Mad Minutes Practice ⏰")
@@ -43,7 +48,6 @@ st.write("Unlike normal Mad Minutes, you will continue getting practice question
 st.markdown(":gray[Created by Alex Kuriakose, Class of '27 @ Sharon High School]")
 st.divider()
 
-APP_VERSION = "v1.3.2"
 
 st.markdown(
     f"""
@@ -196,13 +200,24 @@ if not st.session_state.started:
     st.subheader("Formatting Tips")
     st.markdown("""
      * Use the letter 'v' to indicate square roots (e.g. v3/2)
-     * Use 'undefined' for undefined values
+     * Use 'undefined' or 'und' for undefined values
      * Put negative signs at the very front of a number (e.g. -1/2, NOT 1/-2)
      """)
 
     st.subheader("Options")
+    st.write("Select trig functions to practice:")
     with st.container(horizontal=True):
-        mode = st.radio("Select mode:", ["Basic (sin/cos/tan)", "Advanced (includes sec/csc/cot)"])
+        col1, col2, col3 = st.columns([0.1, 0.1, 0.15])
+        with col1:
+            use_sin = st.checkbox("sin", value=True)
+            use_cos = st.checkbox("cos", value=True)
+        with col2:
+            use_tan = st.checkbox("tan", value=True)
+            use_sec = st.checkbox("sec", value=False)
+        with col3:
+            use_csc = st.checkbox("csc", value=False)
+            use_cot = st.checkbox("cot", value=False)
+
         timer_length = st.radio("Select time:", ["3 minutes", "2 minutes"])
 
     basic_trig_list = [trigdata.sin_degrees, trigdata.sin_radians, trigdata.cos_degrees,
@@ -210,15 +225,25 @@ if not st.session_state.started:
     advanced_trig_list = [trigdata.csc_degrees, trigdata.csc_radians, trigdata.sec_degrees,
                           trigdata.sec_radians, trigdata.cot_degrees, trigdata.cot_radians]
     if st.button("Start Practice"):
-        if mode == "Basic (sin/cos/tan)":
-            st.session_state.trig_list = basic_trig_list
-        else:
-            st.session_state.trig_list = basic_trig_list + advanced_trig_list
+        selected_trig_list = []
+        if use_sin:
+            selected_trig_list.extend([trigdata.sin_degrees, trigdata.sin_radians])
+        if use_cos:
+            selected_trig_list.extend([trigdata.cos_degrees, trigdata.cos_radians])
+        if use_tan:
+            selected_trig_list.extend([trigdata.tan_degrees, trigdata.tan_radians])
+        if use_sec:
+            selected_trig_list.extend([trigdata.sec_degrees, trigdata.sec_radians])
+        if use_csc:
+            selected_trig_list.extend([trigdata.csc_degrees, trigdata.csc_radians])
+        if use_cot:
+            selected_trig_list.extend([trigdata.cot_degrees, trigdata.cot_radians])
 
-        if timer_length == "3 minutes":
-            st.session_state.timer_length = 180
-        else:
-            st.session_state.timer_length = 120
+        if not selected_trig_list:
+            st.warning("Please select at least one trig function.")
+            st.stop()
+
+        st.session_state.trig_list = selected_trig_list
 
         st.session_state.started = True
         st.session_state.start_time = time.time()
@@ -230,6 +255,8 @@ if not st.session_state.started:
         current_trig_dict = random.choice(st.session_state.trig_list)
         st.session_state.current_question, st.session_state.current_answer = random.choice(list(current_trig_dict.items()))
         st.rerun()
+    st.divider()
+    st.write("## New Speedrun")
     with st.container(horizontal=True):
         if st.button("Mad Minutes Speedrun"):
             st.session_state.trig_list = basic_trig_list + advanced_trig_list
@@ -254,7 +281,7 @@ if st.session_state.speedrun_mode and st.session_state.started:
         st.write(f"### What is {st.session_state.current_question}?")
         st.markdown("""
         * Use the letter 'v' to indicate square roots (e.g. v3/2)
-        * Use 'undefined' for undefined values
+        * Use 'undefined' or 'und' for undefined values
         """)
         with st.form(key='answer_form', clear_on_submit=True):
             user_answer = st.text_input("Your answer:", key=f"input_{st.session_state.num_questions}")
@@ -264,7 +291,8 @@ if st.session_state.speedrun_mode and st.session_state.started:
                 processed_answer = (user_answer.lower()
                                     .replace(" ", "")
                                     .replace("0.5", "1/2")
-                                    .replace("v", "√"))
+                                    .replace("v", "√")
+                                    .replace("und", "undefined"))
 
                 st.session_state.num_questions += 1
 
@@ -292,7 +320,7 @@ if st.session_state.started and st.session_state.start_time and not st.session_s
         st.write(f"### What is {st.session_state.current_question}?")
         st.markdown("""
         * Use the letter 'v' to indicate square roots (e.g. v3/2)
-        * Use 'undefined' for undefined values
+        * Use 'undefined' or 'und' for undefined values
         """)
 
         with st.form(key='answer_form', clear_on_submit=True):
@@ -304,7 +332,8 @@ if st.session_state.started and st.session_state.start_time and not st.session_s
                 processed_answer = (user_answer.lower()
                                   .replace(" ", "")
                                   .replace("0.5", "1/2")
-                                  .replace("v", "√"))
+                                  .replace("v", "√")
+                                  .replace("und", "undefined"))
 
                 st.session_state.num_questions += 1
 
