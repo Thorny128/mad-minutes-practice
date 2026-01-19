@@ -23,7 +23,7 @@ if 'started' not in st.session_state:
     st.session_state.speedrun_running = False
     st.session_state.final_time = 0
 
-APP_VERSION = "v1.3.4"
+APP_VERSION = "v1.3.5"
 
 conn = st.connection("gsheets", type=GSheetsConnection)
 if 'df' not in st.session_state:
@@ -40,6 +40,8 @@ with st.sidebar:
     st.write(f"### Release Notes for {APP_VERSION}")
     st.markdown("- Added more granular control for practice mode")
     st.markdown("- You can you use 'und' instead of 'undefined' to save time!")
+    st.markdown("- Added quick select options to quickly jump into practice mode")
+    st.markdown("- Fixed an issue where typing 'undefined' made your answer wrong")
     st.markdown("- Shoutout to Adi and Nathan for being so close to a sub-30 second Mad Minutes!")
 
 # Setup page
@@ -206,18 +208,33 @@ if not st.session_state.started:
      """)
 
     st.subheader("Options")
-    st.write("Select trig functions to practice:")
+    quick_select = st.radio(
+        "Quick select:",
+        ["Basic (sin/cos/tan)", "Advanced (includes sec/csc/cot)"],
+        horizontal=True
+    )
+
+    default_sin, default_cos, default_tan = True, True, True
+    default_sec, default_csc, default_cot = False, False, False
+
+    if quick_select == "Basic (sin/cos/tan)":
+        default_sin, default_cos, default_tan = True, True, True
+        default_sec, default_csc, default_cot = False, False, False
+    elif quick_select == "Advanced (includes sec/csc/cot)":
+        default_sin, default_cos, default_tan = True, True, True
+        default_sec, default_csc, default_cot = True, True, True
+
     with st.container(horizontal=True):
         col1, col2, col3 = st.columns([0.1, 0.1, 0.15])
         with col1:
-            use_sin = st.checkbox("sin", value=True)
-            use_cos = st.checkbox("cos", value=True)
+            use_sin = st.checkbox("sin", value=default_sin)
+            use_cos = st.checkbox("cos", value=default_cos)
         with col2:
-            use_tan = st.checkbox("tan", value=True)
-            use_sec = st.checkbox("sec", value=False)
+            use_tan = st.checkbox("tan", value=default_tan)
+            use_sec = st.checkbox("sec", value=default_sec)
         with col3:
-            use_csc = st.checkbox("csc", value=False)
-            use_cot = st.checkbox("cot", value=False)
+            use_csc = st.checkbox("csc", value=default_csc)
+            use_cot = st.checkbox("cot", value=default_cot)
 
         timer_length = st.radio("Select time:", ["3 minutes", "2 minutes"])
 
@@ -292,8 +309,9 @@ if st.session_state.speedrun_mode and st.session_state.started:
                 processed_answer = (user_answer.lower()
                                     .replace(" ", "")
                                     .replace("0.5", "1/2")
-                                    .replace("v", "√")
-                                    .replace("und", "undefined"))
+                                    .replace("v", "√"))
+                if processed_answer == "und":
+                    processed_answer = "undefined"
 
                 st.session_state.num_questions += 1
 
@@ -331,10 +349,11 @@ if st.session_state.started and st.session_state.start_time and not st.session_s
             if submit and user_answer:
                 # Process answer
                 processed_answer = (user_answer.lower()
-                                  .replace(" ", "")
-                                  .replace("0.5", "1/2")
-                                  .replace("v", "√")
-                                  .replace("und", "undefined"))
+                                    .replace(" ", "")
+                                    .replace("0.5", "1/2")
+                                    .replace("v", "√"))
+                if processed_answer == "und":
+                    processed_answer = "undefined"
 
                 st.session_state.num_questions += 1
 
