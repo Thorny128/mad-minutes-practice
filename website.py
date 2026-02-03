@@ -23,7 +23,7 @@ if 'started' not in st.session_state:
     st.session_state.speedrun_running = False
     st.session_state.final_time = 0
 
-APP_VERSION = "v1.3.5"
+APP_VERSION = "v1.3.6"
 
 conn = st.connection("gsheets", type=GSheetsConnection)
 if 'df' not in st.session_state:
@@ -40,9 +40,8 @@ with st.sidebar:
     st.write(f"### Release Notes for {APP_VERSION}")
     st.markdown("- Added more granular control for practice mode")
     st.markdown("- You can you use 'und' instead of 'undefined' to save time!")
-    st.markdown("- Added quick select options to quickly jump into practice mode")
     st.markdown("- Fixed an issue where typing 'undefined' made your answer wrong")
-    st.markdown("- Shoutout to Adi and Nathan for being so close to a sub-30 second Mad Minutes!")
+    st.markdown("- Fixed the 2 minute practice mode")
 
 # Setup page
 st.title("⏰ Mad Minutes Practice ⏰")
@@ -237,6 +236,10 @@ if not st.session_state.started:
             use_cot = st.checkbox("cot", value=default_cot)
 
         timer_length = st.radio("Select time:", ["3 minutes", "2 minutes"])
+        if timer_length == "3 minutes":
+            st.session_state.timer_length = 180
+        elif timer_length == "2 minutes":
+            st.session_state.timer_length = 120
 
     basic_trig_list = [trigdata.sin_degrees, trigdata.sin_radians, trigdata.cos_degrees,
                        trigdata.cos_radians, trigdata.tan_degrees, trigdata.tan_radians]
