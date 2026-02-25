@@ -23,7 +23,7 @@ if 'started' not in st.session_state:
     st.session_state.speedrun_running = False
     st.session_state.final_time = 0
 
-APP_VERSION = "v1.3.6"
+APP_VERSION = "v1.4.0"
 
 conn = st.connection("gsheets", type=GSheetsConnection)
 if 'df' not in st.session_state:
@@ -38,10 +38,8 @@ with st.sidebar:
     st.dataframe(st.session_state.df)
     st.divider()
     st.write(f"### Release Notes for {APP_VERSION}")
-    st.markdown("- Added more granular control for practice mode")
-    st.markdown("- You can you use 'und' instead of 'undefined' to save time!")
-    st.markdown("- Fixed an issue where typing 'undefined' made your answer wrong")
-    st.markdown("- Fixed the 2 minute practice mode")
+    st.markdown("- Added support for negative angles (-30º, -45º, etc.)")
+    st.markdown("- New checkbox option to include negative angles in practice mode")
 
 # Setup page
 st.title("⏰ Mad Minutes Practice ⏰")
@@ -213,6 +211,8 @@ if not st.session_state.started:
         horizontal=True
     )
 
+    use_negative_angles = st.checkbox("Include negative angles", value=False)
+
     default_sin, default_cos, default_tan = True, True, True
     default_sec, default_csc, default_cot = False, False, False
 
@@ -249,16 +249,28 @@ if not st.session_state.started:
         selected_trig_list = []
         if use_sin:
             selected_trig_list.extend([trigdata.sin_degrees, trigdata.sin_radians])
+            if use_negative_angles:
+                selected_trig_list.extend([trigdata.sin_degrees_negative, trigdata.sin_radians_negative])
         if use_cos:
             selected_trig_list.extend([trigdata.cos_degrees, trigdata.cos_radians])
+            if use_negative_angles:
+                selected_trig_list.extend([trigdata.cos_degrees_negative, trigdata.cos_radians_negative])
         if use_tan:
             selected_trig_list.extend([trigdata.tan_degrees, trigdata.tan_radians])
+            if use_negative_angles:
+                selected_trig_list.extend([trigdata.tan_degrees_negative, trigdata.tan_radians_negative])
         if use_sec:
             selected_trig_list.extend([trigdata.sec_degrees, trigdata.sec_radians])
+            if use_negative_angles:
+                selected_trig_list.extend([trigdata.sec_degrees_negative, trigdata.sec_radians_negative])
         if use_csc:
             selected_trig_list.extend([trigdata.csc_degrees, trigdata.csc_radians])
+            if use_negative_angles:
+                selected_trig_list.extend([trigdata.csc_degrees_negative, trigdata.csc_radians_negative])
         if use_cot:
             selected_trig_list.extend([trigdata.cot_degrees, trigdata.cot_radians])
+            if use_negative_angles:
+                selected_trig_list.extend([trigdata.cot_degrees_negative, trigdata.cot_radians_negative])
 
         if not selected_trig_list:
             st.warning("Please select at least one trig function.")
