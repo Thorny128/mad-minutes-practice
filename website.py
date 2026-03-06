@@ -22,8 +22,9 @@ if 'started' not in st.session_state:
     st.session_state.speedrun_mode = False
     st.session_state.speedrun_running = False
     st.session_state.final_time = 0
+    st.session_state.use_coterminal_angles = False
 
-APP_VERSION = "v1.4.0"
+APP_VERSION = "v1.4.5"
 
 conn = st.connection("gsheets", type=GSheetsConnection)
 if 'df' not in st.session_state:
@@ -39,7 +40,7 @@ with st.sidebar:
     st.divider()
     st.write(f"### Release Notes for {APP_VERSION}")
     st.markdown("- Added support for negative angles (-30º, -45º, etc.)")
-    st.markdown("- New checkbox option to include negative angles in practice mode")
+    st.markdown("- Added support for coterminal angles (-4π to 4π and -720° to 720°)")
 
 # Setup page
 st.title("⏰ Mad Minutes Practice ⏰")
@@ -84,6 +85,108 @@ def run_timer():
 def run_stopwatch():
     elapsed = time.time() - st.session_state.start_time
     st.markdown(f"### Time: {int(elapsed // 60)}:{int(elapsed % 60):02d}")
+
+def generate_coterminal_question(question, answer):
+    """
+    Takes a base angle question and generates a coterminal version.
+    Adds/subtracts multiples of 2π (for radians) or 360º (for degrees).
+    Range: -4π to 4π (or -720º to 720º)
+    """
+    import re
+    from fractions import Fraction
+
+    # Check if it's a degree or radian question
+    if 'º' in question:
+        # Degrees question
+        # Extract the function name and angle
+        match = re.match(r'(\w+)\((-?\d+)º\)', question)
+        if match:
+            func_name = match.group(1)
+            base_angle = int(match.group(2))
+
+            # Choose a random multiple of 360 to add/subtract (-2, -1, 0, 1, 2)
+            multiplier = random.choice([-1, 0, 1])
+            coterminal_angle = base_angle + (multiplier * 360)
+
+            # Only apply coterminal if multiplier is not 0
+            if multiplier != 0:
+                new_question = f"{func_name}({coterminal_angle}º)"
+                return new_question, answer
+    else:
+        # Radians question
+        # Extract the function name and angle
+        match = re.match(r'(\w+)\((.*?)\)', question)
+        if match:
+            func_name = match.group(1)
+            angle_str = match.group(2)
+
+            # Choose a random multiple of 2π to add/subtract (-1, 0, 1)
+            multiplier = random.choice([-1, 0, 1])
+
+            # Only apply coterminal if multiplier is not 0
+            if multiplier != 0:
+                # Parse the angle string to extract the fraction
+                # Handle cases like "0", "π", "π/3", "5π/3", "-π/4", etc.
+
+                if angle_str == "0":
+                    # Special case: 0 + n*2π = n*2π
+                    new_numerator = multiplier * 2
+                    if new_numerator == 1:
+                        new_question = f"{func_name}(π)"
+                    elif new_numerator == -1:
+                        new_question = f"{func_name}(-π)"
+                    else:
+                        new_question = f"{func_name}({new_numerator}π)"
+                    return new_question, answer
+
+                # Parse angle like "π", "5π/3", "-π/4", etc.
+                angle_match = re.match(r'(-?\d*)π(?:/(\d+))?', angle_str)
+                if angle_match:
+                    numerator_str = angle_match.group(1)
+                    denominator_str = angle_match.group(2)
+
+                    # Parse numerator (handle "", "-", and numbers)
+                    if numerator_str == "" or numerator_str == "+":
+                        numerator = 1
+                    elif numerator_str == "-":
+                        numerator = -1
+                    else:
+                        numerator = int(numerator_str)
+
+                    # Parse denominator
+                    denominator = int(denominator_str) if denominator_str else 1
+
+                    # Create fractions and add
+                    base_fraction = Fraction(numerator, denominator)
+                    coterminal_add = Fraction(multiplier * 2, 1)
+                    result_fraction = base_fraction + coterminal_add
+
+                    # Format the result
+                    if result_fraction.denominator == 1:
+                        # Whole number
+                        if result_fraction.numerator == 1:
+                            new_question = f"{func_name}(π)"
+                        elif result_fraction.numerator == -1:
+                            new_question = f"{func_name}(-π)"
+                        elif result_fraction.numerator == 0:
+                            new_question = f"{func_name}(0)"
+                        else:
+                            new_question = f"{func_name}({result_fraction.numerator}π)"
+                    else:
+                        # Fraction
+                        if result_fraction.numerator == 1:
+                            new_question = f"{func_name}(π/{result_fraction.denominator})"
+                        elif result_fraction.numerator == -1:
+                            new_question = f"{func_name}(-π/{result_fraction.denominator})"
+                        elif result_fraction.numerator < 0:
+                            new_question = f"{func_name}(-{abs(result_fraction.numerator)}π/{result_fraction.denominator})"
+                        else:
+                            new_question = f"{func_name}({result_fraction.numerator}π/{result_fraction.denominator})"
+
+                    return new_question, answer
+
+    # If no modification was made, return original
+    return question, answer
 
 # Timer display for practice mode
 if st.session_state.started and st.session_state.start_time and not st.session_state.speedrun_mode:
@@ -212,6 +315,7 @@ if not st.session_state.started:
     )
 
     use_negative_angles = st.checkbox("Include negative angles", value=False)
+    use_coterminal_angles = st.checkbox("Include coterminal angles (-4π to 4π)", value=False)
 
     default_sin, default_cos, default_tan = True, True, True
     default_sec, default_csc, default_cot = False, False, False
@@ -277,6 +381,7 @@ if not st.session_state.started:
             st.stop()
 
         st.session_state.trig_list = selected_trig_list
+        st.session_state.use_coterminal_angles = use_coterminal_angles
 
         st.session_state.started = True
         st.session_state.start_time = time.time()
@@ -287,6 +392,13 @@ if not st.session_state.started:
         # Generate first question
         current_trig_dict = random.choice(st.session_state.trig_list)
         st.session_state.current_question, st.session_state.current_answer = random.choice(list(current_trig_dict.items()))
+
+        # Apply coterminal transformation if enabled
+        if st.session_state.use_coterminal_angles:
+            st.session_state.current_question, st.session_state.current_answer = generate_coterminal_question(
+                st.session_state.current_question, st.session_state.current_answer
+            )
+
         st.rerun()
     st.divider()
     st.write("## New Speedrun")
@@ -384,4 +496,11 @@ if st.session_state.started and st.session_state.start_time and not st.session_s
                 # Generate next question
                 current_trig_dict = random.choice(st.session_state.trig_list)
                 st.session_state.current_question, st.session_state.current_answer = random.choice(list(current_trig_dict.items()))
+
+                # Apply coterminal transformation if enabled
+                if st.session_state.use_coterminal_angles:
+                    st.session_state.current_question, st.session_state.current_answer = generate_coterminal_question(
+                        st.session_state.current_question, st.session_state.current_answer
+                    )
+
                 st.rerun()
